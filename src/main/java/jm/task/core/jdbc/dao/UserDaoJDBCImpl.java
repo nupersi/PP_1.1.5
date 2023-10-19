@@ -8,23 +8,22 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import static jm.task.core.jdbc.util.Util.getConnection;
-
 public class UserDaoJDBCImpl implements UserDao {
 
-    Connection connection = getConnection();
+    Connection connection;
+    Util util;
 
     public UserDaoJDBCImpl() {
-
+        util = new Util();
+        connection = util.getConnection();//todo исправили online, но - потребуется еще правка (после правки в Util) // исправил
     }
 
     public void createUsersTable() {
-        String create = "CREATE TABLE IF NOT EXISTS `mydatabase`.`userstable` (\n" +
-                "  `id` BIGINT NOT NULL AUTO_INCREMENT,\n" +
-                "  `name` VARCHAR(45) ,\n" +
-                "  `lastName` VARCHAR(45) ,\n" +
-                "  `age` TINYINT ,\n" +
-                "  PRIMARY KEY (`id`));\n";
+        String create = "CREATE TABLE IF NOT EXISTS `users` (" +
+                " id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT, " +
+                " name VARCHAR(45), " +
+                " lastName VARCHAR(45), " +
+                " age TINYINT); ";
         try (Statement statement = connection.createStatement()) {
             statement.execute(create);
             System.out.println("DBTable users has been created");
@@ -34,7 +33,7 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void dropUsersTable() {
-        String drop = "DROP TABLE IF EXISTS userstable";
+        String drop = "DROP TABLE IF EXISTS users";
         try (Statement statement = connection.createStatement()) {
             statement.execute(drop);
             System.out.println("DBTable \"users\" has been dropped");
@@ -44,7 +43,7 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        String save = "INSERT INTO userstable (name, lastName, age) VALUES (?, ?, ?)";
+        String save = "INSERT INTO users (name, lastName, age) VALUES (?, ?, ?)";
         try (PreparedStatement preparedStatement = connection.prepareStatement(save)) {
             preparedStatement.setString(1, name);
             preparedStatement.setString(2, lastName);
@@ -56,44 +55,40 @@ public class UserDaoJDBCImpl implements UserDao {
         }
     }
 
-    public void removeUserById(long id) {
-        if (id > 0) {
-            String remove = "DELETE FROM userstable WHERE id = id";
-            try (PreparedStatement preparedStatement = connection.prepareStatement(remove)) {
-                preparedStatement.executeUpdate();
-                System.out.println("User id:" + id + " has been remove");
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("Failed removeUser: User id <= 0");
+    public void removeUserById(long id) {        //todo Изменил реализацию, id заменил на ?. Добавил проверку на выполнение remove действия.
+        String remove = "DELETE FROM users WHERE id = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(remove)) {
+            preparedStatement.setLong(1, id);
+            System.out.println((preparedStatement.executeUpdate() > 0) ? "User id: " + id + " has been removed"
+                    : "User id: " + id + " has not been removed. Wrong id");
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     public List<User> getAllUsers() {
-        List <User> rslist = new ArrayList<>();
+        List<User> result = new ArrayList<>();//todo осмысленные названия переменным // Исправил
 
-        String getAll = "SELECT * FROM userstable";
+        String getAll = "SELECT * FROM users";
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(getAll)) {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                String name = resultSet.getString("name");
-                String lastName = resultSet.getString("lastName");
-                byte age = resultSet.getByte("age");
-                rslist.add(new User(name, lastName, age));
+                User tempUser = new User(resultSet.getString("name"), //todo Добавил setid.
+                        resultSet.getString("lastName"),
+                        resultSet.getByte("age"));
+                tempUser.setId(resultSet.getLong("id"));
+                result.add(tempUser); //todo Сократил return до одного в конце
             }
-            System.out.println("All users of the table \"users\" have been sent");
-            return rslist;
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return rslist;
+        System.out.println("All users of the table \"users\" have been get");
+        return result;
     }
 
     public void cleanUsersTable() {
-        String clean = "TRUNCATE TABLE userstable";
-
+        String clean = "TRUNCATE TABLE users";
         try (Statement statement = connection.createStatement()) {
             statement.execute(clean);
             System.out.println("Table \"users\" has been cleared");
