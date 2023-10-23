@@ -11,28 +11,25 @@ import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
 
-    SessionFactory factory;
+    private final SessionFactory factory;
+    private Transaction transaction;
 
-    Util util;
-    Transaction transaction;
+    private final String createUsersQuery = "CREATE TABLE IF NOT EXISTS User (\n" +
+            "  `id` BIGINT NOT NULL AUTO_INCREMENT,\n" +
+            "  `name` VARCHAR(45) ,\n" +
+            "  `lastName` VARCHAR(45) ,\n" +
+            "  `age` TINYINT ,\n" +
+            "  PRIMARY KEY (`id`));\n";
 
     public UserDaoHibernateImpl() {
-        util = new Util();
-        factory = util.getFactory();
+        factory = new Util().getFactory();
     }
-
 
     @Override
     public void createUsersTable() {
         try (Session s = factory.openSession()) {
             transaction = s.beginTransaction();
-            s.createSQLQuery("CREATE TABLE IF NOT EXISTS User (\n" +
-                            "  `id` BIGINT NOT NULL AUTO_INCREMENT,\n" +
-                            "  `name` VARCHAR(45) ,\n" +
-                            "  `lastName` VARCHAR(45) ,\n" +
-                            "  `age` TINYINT ,\n" +
-                            "  PRIMARY KEY (`id`));\n")
-                    .executeUpdate();
+            s.createSQLQuery(createUsersQuery).executeUpdate();
             transaction.commit();
             System.out.println("DBTable users has been created");
         } catch (TransactionException e) {

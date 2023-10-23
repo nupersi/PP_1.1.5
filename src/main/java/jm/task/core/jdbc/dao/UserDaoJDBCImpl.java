@@ -11,11 +11,9 @@ import java.util.List;
 public class UserDaoJDBCImpl implements UserDao {
 
     Connection connection;
-    Util util;
 
     public UserDaoJDBCImpl() {
-        util = new Util();
-        connection = util.getConnection();//todo исправили online, но - потребуется еще правка (после правки в Util) // исправил
+        connection = new Util().getConnection();
     }
 
     public void createUsersTable() {
@@ -55,7 +53,7 @@ public class UserDaoJDBCImpl implements UserDao {
         }
     }
 
-    public void removeUserById(long id) {        //todo Изменил реализацию, id заменил на ?. Добавил проверку на выполнение remove действия.
+    public void removeUserById(long id) {
         String remove = "DELETE FROM users WHERE id = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(remove)) {
             preparedStatement.setLong(1, id);
@@ -67,18 +65,16 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public List<User> getAllUsers() {
-        List<User> result = new ArrayList<>();//todo осмысленные названия переменным // Исправил
-
+        List<User> result = new ArrayList<>();
         String getAll = "SELECT * FROM users";
-
         try (PreparedStatement preparedStatement = connection.prepareStatement(getAll)) {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                User tempUser = new User(resultSet.getString("name"), //todo Добавил setid.
+                User tempUser = new User(resultSet.getString("name"),
                         resultSet.getString("lastName"),
                         resultSet.getByte("age"));
                 tempUser.setId(resultSet.getLong("id"));
-                result.add(tempUser); //todo Сократил return до одного в конце
+                result.add(tempUser);
             }
         } catch (SQLException e) {
             e.printStackTrace();
