@@ -23,6 +23,10 @@ public class Util {
     private final String USERNAME = "root";
     private final String PASSWORD = "Terminatoratm123.";
 
+    /**
+     * JDBC config
+     * @return Connection
+     */
     public Connection getConnection () {
         try {
             if (!connection.isClosed() && connection != null) {
@@ -40,6 +44,10 @@ public class Util {
         return connection;
     }
 
+    /**
+     * Hibernate config
+     * @return SessionFactory
+     */
     public SessionFactory getFactory () {
         if (factory == null) {
             try {
@@ -47,9 +55,9 @@ public class Util {
 
                 Properties settings = new Properties();
                 settings.put(Environment.DRIVER, "com.mysql.cj.jdbc.Driver");
-                settings.put(Environment.URL, "jdbc:mysql://localhost:3306/mydatabase");
-                settings.put(Environment.USER, "root");
-                settings.put(Environment.PASS, "my179sql");
+                settings.put(Environment.URL, URL);
+                settings.put(Environment.USER, USERNAME);
+                settings.put(Environment.PASS, PASSWORD);
                 settings.put(Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread");
                 settings.put(Environment.HBM2DDL_AUTO, "create-drop");
                 settings.put(Environment.SHOW_SQL, "true");
